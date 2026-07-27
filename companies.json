@@ -1,0 +1,40 @@
+{
+  "companies": [
+    {"name": "OpenAI", "ats": "ashby", "slug": "openai"},
+    {"name": "Anthropic", "ats": "greenhouse", "slug": "anthropic"},
+    {"name": "Databricks", "ats": "greenhouse", "slug": "databricks"},
+    {"name": "Snowflake", "ats": "ashby", "slug": "snowflake"},
+    {"name": "Instacart", "ats": "greenhouse", "slug": "instacart"},
+    {"name": "Pinterest", "ats": "greenhouse", "slug": "pinterest"},
+    {"name": "Flatiron Health", "ats": "greenhouse", "slug": "flatironhealth"},
+    {"name": "Confluent", "ats": "ashby", "slug": "confluent"},
+    {"name": "Palantir", "ats": "lever", "slug": "palantir"},
+    {"name": "Stripe", "ats": "greenhouse", "slug": "stripe"},
+    {"name": "Datadog", "ats": "greenhouse", "slug": "datadog"},
+    {"name": "Robinhood", "ats": "greenhouse", "slug": "robinhood"},
+    {"name": "Mixpanel", "ats": "greenhouse", "slug": "mixpanel"},
+    {"name": "Atlan", "ats": "ashby", "slug": "atlan"},
+    {"name": "Airbyte", "ats": "ashby", "slug": "airbyte"},
+    {"name": "Astronomer", "ats": "ashby", "slug": "astronomer"},
+    {"name": "Lightdash", "ats": "ashby", "slug": "lightdash"},
+    {"name": "Anyscale", "ats": "ashby", "slug": "anyscale"},
+    {"name": "Cohere", "ats": "ashby", "slug": "cohere"},
+    {"name": "Collective Health", "ats": "greenhouse", "slug": "collectivehealth"},
+    {"name": "Fivetran", "ats": "greenhouse", "slug": "fivetran"},
+    {"name": "Amplitude", "ats": "greenhouse", "slug": "amplitude"},
+    {"name": "Scale AI", "ats": "greenhouse", "slug": "scaleai"},
+    {"name": "dbt Labs", "ats": "greenhouse", "slug": "dbtlabsinc"}
+  ],
+  "keywords": [
+    "data engineer",
+    "machine learning engineer",
+    "ml engineer",
+    "mle",
+    "ml infra",
+    "analytics engineer",
+    "data platform",
+    "software engineer, data",
+    "software engineer - data",
+    "sde - data"
+  ]
+}
