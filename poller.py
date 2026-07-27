@@ -1,28 +1,49 @@
 """
-Job poller — checks all confirmed ATS boards, filters to relevant roles,
-diffs against the last snapshot, and reports newly-posted jobs.
-
-Usage (local):
-    pip install requests
-    python3 poller.py
-
-Files it uses:
-    companies.json   -- input, company/ATS/slug + keyword list (checked in)
-    seen_jobs.json    -- state, job IDs already seen (auto-created/updated)
-
-Exit behavior:
-    Prints new matches to stdout as JSON lines. In the GitHub Actions
-    workflow, these get piped into the Telegram notifier step.
+Job poller — checks all confirmed ATS boards, filters to relevant AND
+non-senior roles, diffs against the last snapshot, and reports newly-posted
+jobs along with how long ago each was actually posted.
 """
 
 import json
 import os
 import sys
+from datetime import datetime, timezone
 import requests
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (job-poller/1.0)"}
 CONFIG_PATH = "companies.json"
 STATE_PATH = "seen_jobs.json"
+
+
+def parse_iso(ts):
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def parse_epoch_ms(ms):
+    if not ms:
+        return None
+    try:
+        return datetime.fromtimestamp(int(ms) / 1000, tz=timezone.utc)
+    except Exception:
+        return None
+
+
+def age_str(posted_dt):
+    if posted_dt is None:
+        return "unknown age"
+    now = datetime.now(timezone.utc)
+    delta = now - posted_dt
+    hours = delta.total_seconds() / 3600
+    if hours < 1:
+        return f"{int(delta.total_seconds() / 60)}m ago"
+    if hours < 24:
+        return f"{int(hours)}h ago"
+    return f"{int(hours / 24)}d ago"
 
 
 def fetch_greenhouse(slug):
@@ -31,7 +52,8 @@ def fetch_greenhouse(slug):
     r.raise_for_status()
     jobs = r.json().get("jobs", [])
     return [
-        {"id": str(j["id"]), "title": j["title"], "url": j.get("absolute_url", "")}
+        {"id": str(j["id"]), "title": j["title"], "url": j.get("absolute_url", ""),
+         "posted": parse_iso(j.get("updated_at"))}
         for j in jobs
     ]
 
@@ -42,7 +64,8 @@ def fetch_lever(slug):
     r.raise_for_status()
     jobs = r.json()
     return [
-        {"id": j["id"], "title": j["text"], "url": j.get("hostedUrl", "")}
+        {"id": j["id"], "title": j["text"], "url": j.get("hostedUrl", ""),
+         "posted": parse_epoch_ms(j.get("createdAt"))}
         for j in jobs
     ]
 
@@ -53,7 +76,8 @@ def fetch_ashby(slug):
     r.raise_for_status()
     jobs = r.json().get("jobs", [])
     return [
-        {"id": j["id"], "title": j["title"], "url": j.get("jobUrl", "")}
+        {"id": j["id"], "title": j["title"], "url": j.get("jobUrl", ""),
+         "posted": parse_iso(j.get("publishedAt"))}
         for j in jobs
     ]
 
@@ -64,11 +88,8 @@ def fetch_smartrecruiters(slug):
     r.raise_for_status()
     jobs = r.json().get("content", [])
     return [
-        {
-            "id": j["id"],
-            "title": j["name"],
-            "url": j.get("ref", ""),
-        }
+        {"id": j["id"], "title": j["name"], "url": j.get("ref", ""),
+         "posted": parse_iso(j.get("releasedDate"))}
         for j in jobs
     ]
 
@@ -84,6 +105,11 @@ FETCHERS = {
 def matches_keywords(title, keywords):
     t = title.lower()
     return any(k in t for k in keywords)
+
+
+def is_senior(title, exclude_keywords):
+    t = f" {title.lower()} "
+    return any(k in t for k in exclude_keywords)
 
 
 def load_state():
@@ -103,6 +129,7 @@ def main():
         config = json.load(f)
 
     keywords = [k.lower() for k in config["keywords"]]
+    exclude_keywords = [k.lower() for k in config.get("exclude_keywords", [])]
     state = load_state()
     new_matches = []
 
@@ -113,7 +140,6 @@ def main():
         fetcher = FETCHERS.get(ats)
         if not fetcher:
             continue
-
         try:
             jobs = fetcher(slug)
         except Exception as e:
@@ -129,25 +155,20 @@ def main():
                 continue
             if not matches_keywords(job["title"], keywords):
                 continue
-            new_matches.append(
-                {
-                    "company": name,
-                    "title": job["title"],
-                    "url": job["url"],
-                }
-            )
+            if is_senior(job["title"], exclude_keywords):
+                continue
+            new_matches.append({
+                "company": name, "title": job["title"],
+                "url": job["url"], "posted": age_str(job["posted"]),
+            })
 
-        # Update state for this board regardless of keyword match,
-        # so we don't re-flag irrelevant postings we've already seen.
         state[f"{ats}:{slug}"] = list(current_ids)
 
     save_state(state)
-
     for match in new_matches:
         print(json.dumps(match))
-
     if not new_matches:
-        print("[info] no new matching postings this run", file=sys.stderr)
+        print("[info] no new matching non-senior postings this run", file=sys.stderr)
 
 
 if __name__ == "__main__":

@@ -36,5 +36,22 @@
     "software engineer, data",
     "software engineer - data",
     "sde - data"
+  ],
+  "exclude_keywords": [
+    "senior",
+    "sr.",
+    "sr ",
+    "staff",
+    "principal",
+    "lead ",
+    "manager",
+    "director",
+    "head of",
+    "vp,",
+    "vice president",
+    "distinguished",
+    "architect ii",
+    " iii",
+    " iv "
   ]
 }
