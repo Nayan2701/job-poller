@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write  # needed to commit the updated seen_jobs.json snapshot
 
+concurrency:
+  group: job-poller
+  cancel-in-progress: false
+
 jobs:
   poll:
     runs-on: ubuntu-latest
