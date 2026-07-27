@@ -37,8 +37,7 @@ jobs:
               company=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin)['company'])")
               title=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin)['title'])")
               url=$(echo "$line" | python3 -c "import json,sys; print(json.load(sys.stdin)['url'])")
-              text="🔔 New posting: ${company} — ${title}
-${url}"
+              text="🔔 New posting: ${company} — ${title}"$'\n'"${url}"
               curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
                 -d chat_id="${TELEGRAM_CHAT_ID}" \
                 --data-urlencode text="$text"
