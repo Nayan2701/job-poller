@@ -56,5 +56,11 @@ jobs:
           git config user.email "actions@github.com"
           git add seen_jobs.json
           git diff --quiet --cached || git commit -m "Update job snapshot [skip ci]"
-          git pull --rebase origin main
-          git push
+          n=0
+          until [ $n -ge 5 ]
+          do
+            git pull --rebase origin main && git push && break
+            n=$((n+1))
+            echo "Push failed, retrying ($n/5)..."
+            sleep 5
+          done
